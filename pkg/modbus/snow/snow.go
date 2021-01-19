@@ -22,14 +22,15 @@ func GetSnowData(rtuDevice string){
 	handler.SlaveId = 1
 	err := handler.Connect()
 	if err != nil {
-		logrus.Info("访问雨雪设备串口异常")
+		logrus.Infof("访问串口%v异常",rtuDevice)
 	}
 	defer handler.Close()
 	client := modbus.NewClient(handler)
 	for i:=1;i<=5;i++{
 		results, err := client.ReadHoldingRegisters(22, 1)
 		if err != nil || results == nil {
-			logrus.Info("访问雨雪设备串口异常,尝试重新访问雨雪串口")
+			logrus.Info("访问雨雪设备异常,无法获取雨雪数据,尝试重新访问设备")
+			continue
 		}
 		var snow float64
 		s1 := strings.Replace(fmt.Sprintf("%v", results), "[", "", -1)
@@ -45,5 +46,8 @@ func GetSnowData(rtuDevice string){
 			logrus.Infof("snow: %v【无法从雨雪设备获取有效的数据】",snow)
 		}
 		time.Sleep(time.Second * 1)
+		if i==5{
+			logrus.Infof("串口:%v以及设备一切正常",rtuDevice)
+		}
 	}
 }
